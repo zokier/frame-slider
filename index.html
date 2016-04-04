@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>frame-slider</title>
+<style type="text/css">
+body {
+    margin: 0;
+    overflow: flex;
+    height: 100vh;
+}
+
+iframe {
+    height: 100%;
+    width: 100%;
+    border: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.items {
+    min-width: 100%;
+    height: 100%;
+}
+
+.slideout {
+    animation-duration: 1s;
+    animation-delay: 5s;
+    animation-name: slideout;
+    animation-fill-mode: both;
+}
+
+@keyframes slideout {
+    from {
+        margin-left: 0%;
+    }
+
+    to {
+        margin-left: -100%;
+    }
+}
+
+#main-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    overflow: hidden;
+}
+</style>
+    </head>
+    <body>
+        <div id="main-container">
+        </div>
+<script>
+function listener(e) {
+    var main_container = document.getElementById("main-container");
+    var old_e = main_container.firstElementChild;
+    old_e.className = "items";
+    old_e.remove();
+    main_container.appendChild(old_e);
+    var e = main_container.firstElementChild;
+    e.addEventListener("animationend", listener, false);
+    e.className = e.className + " slideout";
+}
+
+var data = {
+    "items": [
+        { "url": "a.html" },
+        { "url": "http://slashdot.org" },
+        { "url": "b.html" },
+        { "url": "catpic.jpg" },
+    ]
+};
+
+var main_container = document.getElementById("main-container");
+
+function add_new_iframe(main_container, url) {
+    var new_item_div = document.createElement("div");
+    var new_item_iframe = document.createElement("iframe");
+    new_item_iframe.setAttribute("src", url);
+    new_item_iframe.setAttribute("scrolling", "no");
+    new_item_div.className = "items";
+    new_item_div.appendChild(new_item_iframe);
+    main_container.appendChild(new_item_div);
+}
+
+data.items.forEach(function(item) {
+    add_new_iframe(main_container, item.url);
+});
+
+var e = main_container.firstElementChild;
+e.addEventListener("animationend", listener, false);
+e.className = e.className + " slideout";
+
+</script>
+    </body>
+</html>
