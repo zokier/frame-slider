@@ -6,7 +6,7 @@
 <style type="text/css">
 body {
     margin: 0;
-    overflow: flex;
+    display: flex;
     height: 100vh;
 }
 
@@ -26,7 +26,6 @@ iframe {
 
 .slideout {
     animation-duration: 1s;
-    animation-delay: 5s;
     animation-name: slideout;
     animation-fill-mode: both;
 }
@@ -52,7 +51,63 @@ iframe {
     <body>
         <div id="main-container">
         </div>
+<script src="config.js">
+</script>
 <script>
+// some sample data for testing
+var data = {
+    "items": [
+        {
+            "url": "a.html",
+            "type": "iframe",
+            "duration": 5
+        },
+        {
+            "url": "IncompatibleGrizzledGallowaycow.webm",
+            "type": "video",
+            "duration": 0
+        },
+        {
+            "url": "b.html",
+            "type": "iframe",
+            "duration": 5
+        },
+        {
+            "url": "catpic.jpg",
+            "type": "image",
+            "duration": 5
+        },
+    ]
+};
+
+function get_playlist_id(id, cb) {
+    //TODO
+}
+
+function get_playlist(id, cb) {
+    var playlistRequest = new XMLHttpRequest();
+    playlistRequest.addEventListener("load", function() {
+        cb(JSON.parse(playlistRequest.responseText));
+    });
+    playlistRequest.open('GET', COUCHDB_BASE_URL + '/playlists/' + id, true);
+    playlistRequest.send();
+}
+
+var playlist = data;
+//parse params from fragment id
+window.location.hash.substr(1).split("&").forEach(function(kv) {
+    var [k,v] = kv.split("=");
+    if (k == "node") {
+        get_playlist_id(v, function(id) {
+            get_playlist(id, function(pl) {
+                playlist = pl;
+            });
+        });
+    } else if (k == "playlist") {
+        get_playlist(v, function(pl) { playlist = pl; });
+    }
+});
+
 function listener(e) {
     var main_container = document.getElementById("main-container");
     var old_e = main_container.firstElementChild;
@@ -62,37 +117,30 @@ function listener(e) {
     var e = main_container.firstElementChild;
     e.addEventListener("animationend", listener, false);
     e.className = e.className + " slideout";
+    //TODO better way to set delay
+    e.style.cssText = "animation-delay: " + e.getAttribute("fs-duration") + "s;";
 }
-
-var data = {
-    "items": [
-        { "url": "a.html" },
-        { "url": "http://slashdot.org" },
-        { "url": "b.html" },
-        { "url": "catpic.jpg" },
-    ]
-};
 
 var main_container = document.getElementById("main-container");
 
-function add_new_iframe(main_container, url) {
+function add_new_iframe(main_container, item) {
     var new_item_div = document.createElement("div");
     var new_item_iframe = document.createElement("iframe");
-    new_item_iframe.setAttribute("src", url);
+    new_item_iframe.setAttribute("src", item.url);
     new_item_iframe.setAttribute("scrolling", "no");
     new_item_div.className = "items";
+    new_item_div.setAttribute("fs-duration", item.duration);
     new_item_div.appendChild(new_item_iframe);
     main_container.appendChild(new_item_div);
 }
 
-data.items.forEach(function(item) {
-    add_new_iframe(main_container, item.url);
+playlist.items.forEach(function(item) {
+    add_new_iframe(main_container, item);
 });
 
 var e = main_container.firstElementChild;
 e.addEventListener("animationend", listener, false);
 e.className = e.className + " slideout";
-
 </script>
     </body>
 </html>
