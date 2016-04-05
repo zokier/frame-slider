@@ -54,50 +54,8 @@ iframe {
 <script src="config.js">
 </script>
 <script>
-// some sample data for testing
-var data = {
-    "items": [
-        {
-            "url": "unconfigured.html",
-            "type": "iframe",
-            "duration": 5
-        },
-        {
-            "url": "unconfigured.html",
-            "type": "iframe",
-            "duration": 5
-        }
-    ]
-};
-
-function get_playlist_id(id, cb) {
-    //TODO
-}
-
-function get_playlist(id, cb) {
-    var playlistRequest = new XMLHttpRequest();
-    playlistRequest.addEventListener("load", function() {
-        cb(JSON.parse(playlistRequest.responseText));
-    });
-    playlistRequest.open('GET', COUCHDB_BASE_URL + '/playlists/' + id, true);
-    playlistRequest.send();
-}
-
-var playlist = data;
-//parse params from fragment id
-window.location.hash.substr(1).split("&").forEach(function(kv) {
-    var [k,v] = kv.split("=");
-    if (k == "node") {
-        get_playlist_id(v, function(id) {
-            get_playlist(id, function(pl) {
-                playlist = pl;
-            });
-        });
-    } else if (k == "playlist") {
-        get_playlist(v, function(pl) { playlist = pl; });
-    }
-});
-
+// animation listener
+// sets next item in slider and configures animation
 function listener(e) {
     var main_container = document.getElementById("main-container");
     var old_e = main_container.firstElementChild;
@@ -111,8 +69,7 @@ function listener(e) {
     e.style.cssText = "animation-delay: " + e.getAttribute("fs-duration") + "s;";
 }
 
-var main_container = document.getElementById("main-container");
-
+//adds new iframe with configuration from item to main_container
 function add_new_iframe(main_container, item) {
     var new_item_div = document.createElement("div");
     var new_item_iframe = document.createElement("iframe");
@@ -124,13 +81,45 @@ function add_new_iframe(main_container, item) {
     main_container.appendChild(new_item_div);
 }
 
-playlist.items.forEach(function(item) {
-    add_new_iframe(main_container, item);
-});
+// creates slider from playlist
+function create_slider(playlist) {
+    var main_container = document.getElementById("main-container");
 
-var e = main_container.firstElementChild;
-e.addEventListener("animationend", listener, false);
-e.className = e.className + " slideout";
+    playlist.items.forEach(function(item) {
+        add_new_iframe(main_container, item);
+    });
+
+    var e = main_container.firstElementChild;
+    e.addEventListener("animationend", listener, false);
+    e.className = e.className + " slideout";
+}
+
+// gets playlist-id with node-id id and invokes callback cb with result
+function get_playlist_id(id, cb) {
+    //TODO
+}
+
+// gets playlist with id from couchdb and invokes callback cb with result
+function get_playlist(id, cb) {
+    var playlistRequest = new XMLHttpRequest();
+    playlistRequest.addEventListener("load", function() {
+        cb(JSON.parse(playlistRequest.responseText));
+    });
+    playlistRequest.open('GET', COUCHDB_BASE_URL + '/playlists/' + id, true);
+    playlistRequest.send();
+}
+
+//parse params from fragment id
+window.location.hash.substr(1).split("&").forEach(function(kv) {
+    var [k,v] = kv.split("=");
+    if (k == "node") {
+        get_playlist_id(v, function(id) {
+            get_playlist(id, create_slider);
+        });
+    } else if (k == "playlist") {
+        get_playlist(v, create_slider);
+    }
+});
 </script>
     </body>
 </html>
